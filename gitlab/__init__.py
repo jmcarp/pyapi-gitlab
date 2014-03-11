@@ -1590,7 +1590,7 @@ class Gitlab(object):
                                   headers=self.headers, data=data)
 
         if request.status_code == 201:
-            return True
+            return json.loads(request.content.decode("utf-8"))
         else:
             return False
 
@@ -1610,7 +1610,7 @@ class Gitlab(object):
                                   headers=self.headers, data=data)
 
         if request.status_code == 200:
-            return True
+            return json.loads(request.content.decode("utf-8"))
         else:
             return False
 
