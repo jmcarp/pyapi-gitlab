@@ -432,9 +432,8 @@ class Gitlab(object):
         request = requests.post(self.projects_url + "/user/" + str(id_),
                                 headers=self.headers, data=data, verify=self.verify_ssl)
         if request.status_code == 201:
-            return True
+            return json.loads(request.content.decode("utf-8"))
         else:
-            
             return False
 
     def listprojectmembers(self, id_):
@@ -1571,6 +1570,23 @@ class Gitlab(object):
 
         if request.status_code == 201:
             return True
+        else:
+            return False
+
+    def getfile(self, project_id, file_path, ref):
+        """
+        Creates a new file in the repository
+        :param project_id: project id
+        :param file_path: Full path to new file. Ex. lib/class.rb
+        :param ref: Branch or SHA
+        :return: Response JSON if success, false if not
+        """
+        data = {"file_path": file_path, "ref": ref}
+        request = requests.get(self.projects_url + "/" + str(project_id) + "/repository/files",
+                                  headers=self.headers, params=data)
+        import pdb; pdb.set_trace()
+        if request.status_code == 200:
+            return json.loads(request.content.decode("utf-8"))
         else:
             return False
 
