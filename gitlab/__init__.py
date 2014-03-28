@@ -91,6 +91,8 @@ class Gitlab(object):
                    username,
                    password,
                    email,
+                   encrypted_password="",
+                   skip_confirmation=False,
                    skype="",
                    linkedin="",
                    twitter="",
@@ -109,6 +111,7 @@ class Gitlab(object):
         """
         data = {"name": name, "username": username, "password": password,
                 "email": email, "skype": skype,
+                "encrypted_password": encrypted_password, "skip_confirmation": False,
                 "twitter": twitter, "linkedin": linkedin,
                 "projects_limit": projects_limit, "extern_uid": extern_uid,
                 "provider": provider, "bio": bio}
@@ -152,6 +155,7 @@ class Gitlab(object):
                  username="",
                  password="",
                  email="",
+                 encrypted_password="",
                  skype="",
                  linkedin="",
                  twitter="",
@@ -188,6 +192,8 @@ class Gitlab(object):
             data["password"] = password
         if email != "":
             data["email"] = email
+        if encrypted_password != "":
+            data["encrypted_password"] = encrypted_password
         if skype != "":
             data["skype"] = skype
         if linkedin != "":
@@ -204,15 +210,11 @@ class Gitlab(object):
             data["bio"] = bio
         if sudo != "":
             data['sudo'] = sudo
-        request = requests.put(self.users_url + "/" + str(id_),
+        response = requests.put(self.users_url + "/" + str(id_),
                                headers=self.headers, data=data)
-        if request.status_code == 404:
-            return True
-        # There is a problem here and that is that the api always return 404,
-        #  doesn't matter what heappened with the request,
-        # so now way of knowing what happened
-        else:
-            return False
+        if response.status_code == 200:
+            return response.json()
+        return exceptions.GitlabError(response)
 
     def getsshkeys(self):
         """
@@ -435,6 +437,21 @@ class Gitlab(object):
             return json.loads(request.content.decode("utf-8"))
         else:
             return False
+    
+    def createfork(self, id_):
+        response = requests.post(self.projects_url + "/" + str(id_) + "/fork",
+                                 headers=self.headers, verify=self.verify_ssl)
+        if response.status_code == 201:
+            return response.json()
+        return exceptions.GitlabError(response)
+
+    def createcopy(self, id_, user_id, name):
+        response = requests.post(self.projects_url + "/" + str(id_) + "/copy",
+                                 headers=self.headers, verify=self.verify_ssl,
+                                 data={'user_id': user_id, 'name': name})
+        if response.status_code == 201:
+            return response.json()
+        return exceptions.GitlabError(response)
 
     def listprojectmembers(self, id_):
         """
@@ -560,13 +577,11 @@ class Gitlab(object):
         :return: True if success
         """
         data = {"id": id_, "url": url}
-        request = requests.post(self.projects_url + "/" + str(id_) + "/hooks",
+        response = requests.post(self.projects_url + "/" + str(id_) + "/hooks",
                                 headers=self.headers, data=data, verify=self.verify_ssl)
-        if request.status_code == 201:
-            return True
-        else:
-            
-            return False
+        if response.status_code == 201:
+            return response.json()
+        raise exceptions.GitlabError(response)
 
     def editprojecthook(self, id_, hook_id, url, sudo=""):
         """
@@ -596,14 +611,12 @@ class Gitlab(object):
         :param hook_id: hook id
         :return: True if success
         """
-        request = requests.delete(self.projects_url + "/" + str(id_)
+        response = requests.delete(self.projects_url + "/" + str(id_)
                                   + "/hooks/"
                                   + str(hook_id), headers=self.headers)
-        if request.status_code == 200:
-            return True
-        else:
-            
-            return False
+        if response.status_code == 200:
+            return response.json()
+        raise exceptions.GitlabError(response)
 
     def listbranches(self, id_):
         """
@@ -1259,13 +1272,19 @@ class Gitlab(object):
         else:
             return False
 
-    def listrepositorycommits(self, project_id):
-        request = requests.get(self.projects_url + "/" + str(project_id) +
-                               "/repository/commits", headers=self.headers)
-        if request.status_code == 200:
-            return json.loads(request.content.decode("utf-8"))
-        else:
-            return False
+    def listrepositorycommits(self, project_id, ref_name=None, path=None, page=None, per_page=None):
+        data = {
+            'ref_name': ref_name,
+            'path': path,
+            'page': page,
+            'per_page': per_page,
+        }
+        response = requests.get(self.projects_url + "/" + str(project_id) +
+                               "/repository/commits", headers=self.headers,
+                               data=data)
+        if response.status_code == 200:
+            return response.json()
+        raise exceptions.GitlabError(response)
 
     def listrepositorycommit(self, project_id, sha1):
         request = requests.get(self.projects_url + "/" + str(project_id) +
@@ -1584,13 +1603,12 @@ class Gitlab(object):
         data = {"file_path": file_path, "ref": ref}
         request = requests.get(self.projects_url + "/" + str(project_id) + "/repository/files",
                                   headers=self.headers, params=data)
-        import pdb; pdb.set_trace()
         if request.status_code == 200:
             return json.loads(request.content.decode("utf-8"))
         else:
             return False
 
-    def createfile(self, project_id, file_path, branch_name, content, commit_message):
+    def createfile(self, project_id, file_path, branch_name, content, commit_message, encoding='text', user_id=None):
         """
         Creates a new file in the repository
         :param project_id: project id
@@ -1601,7 +1619,8 @@ class Gitlab(object):
         :return: true if success, false if not
         """
         data = {"file_path": file_path, "branch_name": branch_name,
-                "content": content, "commit_message": commit_message}
+                "content": content, "commit_message": commit_message,
+                "encoding": encoding, "user_id": user_id}
         request = requests.post(self.projects_url + "/" + str(project_id) + "/repository/files",
                                   headers=self.headers, data=data)
 
@@ -1610,7 +1629,7 @@ class Gitlab(object):
         else:
             return False
 
-    def updatefile(self, project_id, file_path, branch_name, content, commit_message):
+    def updatefile(self, project_id, file_path, branch_name, content, commit_message, encoding='text', user_id=None):
         """
         Updates an existing file in the repository
         :param project_id: project id
@@ -1621,7 +1640,8 @@ class Gitlab(object):
         :return: true if success, false if not
         """
         data = {"file_path": file_path, "branch_name": branch_name,
-                "content": content, "commit_message": commit_message}
+                "content": content, "commit_message": commit_message,
+                "encoding": encoding, "user_id": user_id}
         request = requests.put(self.projects_url + "/" + str(project_id) + "/repository/files",
                                   headers=self.headers, data=data)
 
