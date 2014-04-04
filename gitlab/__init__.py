@@ -117,12 +117,11 @@ class Gitlab(object):
                 "provider": provider, "bio": bio}
         if sudo != "":
             data['sudo'] = sudo
-        request = requests.post(self.users_url, headers=self.headers, data=data, 
+        response = requests.post(self.users_url, headers=self.headers, data=data, 
                                 verify=self.verify_ssl)
-        if request.status_code == 201:
-            return json.loads(request.content.decode("utf-8"))
-        elif request.status_code == 404:
-            return False
+        if response.status_code == 201:
+            return response.json()
+        return exceptions.GitlabError(response)
 
     def deleteuser(self, id_):
         """
@@ -332,6 +331,13 @@ class Gitlab(object):
         else:
             return False
 
+    def getprojectready(self, id_):
+        response = requests.get(self.projects_url + "/" + str(id_) + "/ready",
+                               headers=self.headers, verify=self.verify_ssl)
+        if response.status_code == 200:
+            return response.json()
+        raise exceptions.GitlabError(response)
+
     def getproject(self, id_):
         """
         Get info for a project identified by id
@@ -451,7 +457,7 @@ class Gitlab(object):
                                  data={'user_id': user_id, 'name': name})
         if response.status_code == 201:
             return response.json()
-        return exceptions.GitlabError(response)
+        raise exceptions.GitlabError(response)
 
     def listprojectmembers(self, id_):
         """
@@ -1601,12 +1607,11 @@ class Gitlab(object):
         :return: Response JSON if success, false if not
         """
         data = {"file_path": file_path, "ref": ref}
-        request = requests.get(self.projects_url + "/" + str(project_id) + "/repository/files",
+        response = requests.get(self.projects_url + "/" + str(project_id) + "/repository/files",
                                   headers=self.headers, params=data)
-        if request.status_code == 200:
-            return json.loads(request.content.decode("utf-8"))
-        else:
-            return False
+        if response.status_code == 200:
+            return response.json()
+        raise exceptions.GitlabError(response)
 
     def createfile(self, project_id, file_path, branch_name, content, commit_message, encoding='text', user_id=None):
         """
@@ -1621,13 +1626,12 @@ class Gitlab(object):
         data = {"file_path": file_path, "branch_name": branch_name,
                 "content": content, "commit_message": commit_message,
                 "encoding": encoding, "user_id": user_id}
-        request = requests.post(self.projects_url + "/" + str(project_id) + "/repository/files",
+        response = requests.post(self.projects_url + "/" + str(project_id) + "/repository/files",
                                   headers=self.headers, data=data)
 
-        if request.status_code == 201:
-            return json.loads(request.content.decode("utf-8"))
-        else:
-            return False
+        if response.status_code == 201:
+            return response.json()
+        raise exceptions.GitlabError(response)
 
     def updatefile(self, project_id, file_path, branch_name, content, commit_message, encoding='text', user_id=None):
         """
@@ -1642,13 +1646,12 @@ class Gitlab(object):
         data = {"file_path": file_path, "branch_name": branch_name,
                 "content": content, "commit_message": commit_message,
                 "encoding": encoding, "user_id": user_id}
-        request = requests.put(self.projects_url + "/" + str(project_id) + "/repository/files",
+        response = requests.put(self.projects_url + "/" + str(project_id) + "/repository/files",
                                   headers=self.headers, data=data)
 
-        if request.status_code == 200:
-            return json.loads(request.content.decode("utf-8"))
-        else:
-            return False
+        if response.status_code == 200:
+            return response.json()
+        raise exceptions.GitlabError(response)
 
     def deletefile(self, project_id, file_path, branch_name, commit_message):
         """
@@ -1661,13 +1664,12 @@ class Gitlab(object):
         """
         data = {"file_path": file_path, "branch_name": branch_name,
                 "commit_message": commit_message}
-        request = requests.delete(self.projects_url + "/" + str(project_id) + "/repository/files",
+        response = requests.delete(self.projects_url + "/" + str(project_id) + "/repository/files",
                                   headers=self.headers, data=data)
 
-        if request.status_code == 200:
-            return True
-        else:
-            return False
+        if response.status_code == 200:
+            return response.json()
+        raise exceptions.GitlabError(response)
 
     def setgitlabciservice(self, project_id, token, project_url):
         """
