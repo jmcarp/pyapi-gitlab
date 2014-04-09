@@ -352,6 +352,18 @@ class Gitlab(object):
             
             return False
 
+    def getprojectready(self, id_):
+        """
+
+        """
+        response = requests.get(
+            self.projects_url + '/' + str(id_) + '/ready',
+            headers=self.headers, verify=self.verify_ssl,
+        )
+        if response.status_code == 200:
+            return response.json()
+        raise exceptions.GitlabError(response)
+
     def getprojectevents(self, id_, page=1, per_page=20):
         """
         Get the project identified by id, events(commits)
