@@ -121,7 +121,7 @@ class Gitlab(object):
                                 verify=self.verify_ssl)
         if response.status_code == 201:
             return response.json()
-        return exceptions.GitlabError(response)
+        raise exceptions.GitlabError(response)
 
     def deleteuser(self, id_):
         """
