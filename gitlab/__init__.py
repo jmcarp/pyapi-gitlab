@@ -1291,7 +1291,7 @@ class Gitlab(object):
             return False
 
     def listrepositorycommits(self, project_id, ref_name=None, path=None, page=None, per_page=None):
-        data = {
+        params = {
             'ref_name': ref_name,
             'path': path,
             'page': page,
@@ -1299,7 +1299,7 @@ class Gitlab(object):
         }
         response = requests.get(self.projects_url + "/" + str(project_id) +
                                "/repository/commits", headers=self.headers,
-                               data=data)
+                               params=params)
         if response.status_code == 200:
             return response.json()
         raise exceptions.GitlabError(response)
