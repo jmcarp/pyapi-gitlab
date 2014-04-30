@@ -420,7 +420,7 @@ class Gitlab(object):
         :return: always true
         """
         request = requests.delete(self.projects_url + "/" + str(project_id),
-                                  headers=self.headers)
+                                  headers=self.headers, verify=self.verify_ssl)
         if request.status_code == 200:
             return True
 
@@ -544,7 +544,7 @@ class Gitlab(object):
         """
         request = requests.delete(self.projects_url + "/" + str(id_)
                                   + "/members/" + str(user_id),
-                                  headers=self.headers)
+                                  headers=self.headers, verify=self.verify_ssl)
         if request.status_code == 200:
             return True  # It always returns true
 
@@ -624,7 +624,8 @@ class Gitlab(object):
         """
         response = requests.delete(self.projects_url + "/" + str(id_)
                                   + "/hooks/"
-                                  + str(hook_id), headers=self.headers)
+                                  + str(hook_id), headers=self.headers,
+                                  verify=self.verify_ssl)
         if response.status_code == 200:
             return response.json()
         raise exceptions.GitlabError(response)
