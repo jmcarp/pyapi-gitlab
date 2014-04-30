@@ -1620,7 +1620,7 @@ class Gitlab(object):
         """
         data = {"file_path": file_path, "ref": ref}
         response = requests.get(self.projects_url + "/" + str(project_id) + "/repository/files",
-                                  headers=self.headers, params=data)
+                                  headers=self.headers, params=data, verify=self.verify_ssl)
         if response.status_code == 200:
             return response.json()
         raise exceptions.GitlabError(response)
