@@ -407,17 +407,11 @@ class Gitlab(object):
             raise TypeError
         if public != 0:
             data['public'] = public
-        request = requests.post(self.projects_url, headers=self.headers,
+        response = requests.post(self.projects_url, headers=self.headers,
                                 data=data, verify=self.verify_ssl)
-        if request.status_code == 201:
-            return json.loads(request.content.decode("utf-8"))
-        elif request.status_code == 403:
-            if "Your own projects limit is 0" in request.content:
-                print(request.content)
-                return False
-        else:
-            
-            return False
+        if response.status_code == 201:
+            return response.json()
+        raise exceptions.GitlabError(response)
 
     def deleteproject(self, project_id):
         """
@@ -449,12 +443,11 @@ class Gitlab(object):
                 "snippets_enabled": snippets_enabled}
         if sudo != "":
             data['sudo'] = sudo
-        request = requests.post(self.projects_url + "/user/" + str(id_),
+        response = requests.post(self.projects_url + "/user/" + str(id_),
                                 headers=self.headers, data=data, verify=self.verify_ssl)
-        if request.status_code == 201:
-            return json.loads(request.content.decode("utf-8"))
-        else:
-            return False
+        if response.status_code == 201:
+            return response.json()
+        raise exceptions.GitlabError(response)
     
     def createfork(self, id_):
         response = requests.post(self.projects_url + "/" + str(id_) + "/fork",
