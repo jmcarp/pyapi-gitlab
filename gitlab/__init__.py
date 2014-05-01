@@ -1278,7 +1278,7 @@ class Gitlab(object):
 
     def listrepositorytags(self, project_id):
         request = requests.get(self.projects_url + "/" + str(project_id) +
-                               "/repository/tags", headers=self.headers
+                               "/repository/tags", headers=self.headers,
                                verify=self.verify_ssl)
         if request.status_code == 200:
             return json.loads(request.content.decode("utf-8"))
