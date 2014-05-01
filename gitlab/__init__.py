@@ -1635,7 +1635,7 @@ class Gitlab(object):
                 "content": content, "commit_message": commit_message,
                 "encoding": encoding, "user_id": user_id}
         response = requests.post(self.projects_url + "/" + str(project_id) + "/repository/files",
-                                  headers=self.headers, data=data)
+                                  headers=self.headers, data=data, verify=self.verify_ssl)
 
         if response.status_code == 201:
             return response.json()
@@ -1655,7 +1655,7 @@ class Gitlab(object):
                 "content": content, "commit_message": commit_message,
                 "encoding": encoding, "user_id": user_id}
         response = requests.put(self.projects_url + "/" + str(project_id) + "/repository/files",
-                                  headers=self.headers, data=data)
+                                  headers=self.headers, data=data, verify=self.verify_ssl)
 
         if response.status_code == 200:
             return response.json()
