@@ -1278,7 +1278,8 @@ class Gitlab(object):
 
     def listrepositorytags(self, project_id):
         request = requests.get(self.projects_url + "/" + str(project_id) +
-                               "/repository/tags", headers=self.headers)
+                               "/repository/tags", headers=self.headers
+                               verify=self.verify_ssl)
         if request.status_code == 200:
             return json.loads(request.content.decode("utf-8"))
         else:
@@ -1293,7 +1294,7 @@ class Gitlab(object):
         }
         response = requests.get(self.projects_url + "/" + str(project_id) +
                                "/repository/commits", headers=self.headers,
-                               params=params)
+                               params=params, verify=self.verify_ssl)
         if response.status_code == 200:
             return response.json()
         raise exceptions.GitlabError(response)
@@ -1301,7 +1302,7 @@ class Gitlab(object):
     def listrepositorycommit(self, project_id, sha1):
         request = requests.get(self.projects_url + "/" + str(project_id) +
                                "/repository/commits/" + str(sha1),
-                               headers=self.headers)
+                               headers=self.headers, verify=self.verify_ssl)
         if request.status_code == 200:
             return json.loads(request.content.decode("utf-8"))
         else:
@@ -1310,7 +1311,7 @@ class Gitlab(object):
     def listrepositorycommitdiff(self, project_id, sha1):
         request = requests.get(self.projects_url + "/" + str(project_id) +
                                "/repository/commits/" + str(sha1) + "/diff",
-                               headers=self.headers)
+                               headers=self.headers, verify=self.verify_ssl)
         if request.status_code == 200:
             # it returns a list of dicts, which is nonsense as we are requesting
             # just one diff, so we use the [0] to return only the first and only
@@ -1328,7 +1329,7 @@ class Gitlab(object):
 
         request = requests.get(self.projects_url + "/" + str(project_id) +
                                "/repository/tree/", params=data,
-                               headers=self.headers)
+                               headers=self.headers, verify=self.verify_ssl)
         if request.status_code == 200:
             return json.loads(request.content.decode("utf-8"))
         else:
@@ -1339,7 +1340,8 @@ class Gitlab(object):
 
         request = requests.get(self.projects_url + "/" + str(project_id) +
                                "/repository/blobs/" + str(sha1),
-                               params=data, headers=self.headers)
+                               params=data, headers=self.headers,
+                               verify=self.verify_ssl)
         if request.status_code == 200:
             return request.content.decode("utf-8")
         else:
