@@ -529,7 +529,7 @@ class Gitlab(object):
             data['sudo'] = sudo
         request = requests.put(self.projects_url + "/" + str(id_) + "/members/"
                                + str(user_id), headers=self.headers, data=data,
-                               verify=verify_ssl)
+                               verify=self.verify_ssl)
         if request.status_code == 200:
             return True
         else:
