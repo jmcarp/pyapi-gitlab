@@ -1328,13 +1328,12 @@ class Gitlab(object):
         if ref_name != "":
             data['ref_name'] = ref_name
 
-        request = requests.get(self.projects_url + "/" + str(project_id) +
+        response = requests.get(self.projects_url + "/" + str(project_id) +
                                "/repository/tree/", params=data,
                                headers=self.headers, verify=self.verify_ssl)
-        if request.status_code == 200:
-            return json.loads(request.content.decode("utf-8"))
-        else:
-            return False
+        if response.status_code == 200:
+            return response.json()
+        raise exceptions.GitlabError(response)
 
     def getrawblob(self, project_id, sha1, path):
         data = {"filepath": path}
